@@ -9,6 +9,40 @@ const TakeQuiz = () => {
     const [result, setResult] = useState(null);
     const [loading, setLoading] = useState(true);
     const navigate = useNavigate();
+    const [timer, setTimer] = useState(0);
+    const [timeUp, setTimeUp] = useState(false);
+
+    // Countdown timer effect
+    useEffect(() => {
+        if (timer > 0 && !result) {
+            const interval = setInterval(() => {
+                setTimer(prev => {
+                    if (prev <= 1) {
+                        setTimeUp(true);
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+            return () => clearInterval(interval);
+        }
+    }, [timer, result]);
+
+    // Auto-submit when time is up
+    useEffect(() => {
+        if (timeUp && !result) {
+            const autoSubmit = async () => {
+                try {
+                    await api.post(`/quizzes/${id}/attempts`, { answers });
+                    navigate('/'); // Redirect to dashboard
+                } catch (error) {
+                    console.error("Auto-submit failed:", error);
+                    navigate('/'); // Still redirect even if submission fails
+                }
+            };
+            autoSubmit();
+        }
+    }, [timeUp, result, answers, id, navigate]);
 
     useEffect(() => {
         const fetchQuiz = async () => {
@@ -26,6 +60,7 @@ const TakeQuiz = () => {
                 questions.sort((a, b) => a.id - b.id);
 
                 setQuiz({ ...quizData, attributes: { ...quizData.attributes, questions } });
+                setTimer(quizData.attributes.time_limit * 60);
             } catch (error) {
                 console.error("Failed to fetch quiz", error);
             } finally {
@@ -93,10 +128,18 @@ const TakeQuiz = () => {
         );
     }
 
+
     return (
         <div className="p-8 max-w-3xl mx-auto">
             <h1 className="text-3xl font-bold mb-2 text-gray-800">{quiz.attributes.title}</h1>
             <p className="text-gray-600 mb-6">{quiz.attributes.description}</p>
+            <div className="mb-4 p-4 bg-sky-50 border border-sky-200 rounded-lg flex justify-between items-center">
+                <p className="text-gray-600">Time Limit: {quiz.attributes.time_limit} minutes</p>
+                <div className={`text-2xl font-bold ${timer <= 60 ? 'text-red-600 animate-pulse' : 'text-sky-600'}`}>
+                    {Math.floor(timer / 60)}:{(timer % 60).toString().padStart(2, '0')}
+                </div>
+            </div>
+
 
             <form onSubmit={handleSubmit} className="space-y-6">
                 {quiz.attributes.questions.map((q, index) => (

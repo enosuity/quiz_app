@@ -28,7 +28,7 @@ services:
     dockerContext: ./frontend
     envVars:
       - key: VITE_API_URL
-        value: https://quiz-app-backend.onrender.com
+        value: https://quiz-app-fkka.onrender.com
 
 # PostgreSQL Database
 databases:

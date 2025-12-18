@@ -13,8 +13,13 @@ RUN bundle install
 # Copy application code
 COPY . .
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/bin/
+RUN chmod +x /usr/bin/docker-entrypoint.sh
+
 # Expose port
 EXPOSE 3000
 
-# Start server
-CMD ["rails", "server", "-b", "0.0.0.0"]
+# Use entrypoint script
+ENTRYPOINT ["docker-entrypoint.sh"]
+

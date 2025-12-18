@@ -20,7 +20,10 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
+            console.log('Attempting login with:', email);
+            console.log('API URL:', import.meta.env.VITE_API_URL);
             const response = await api.post('/login', { user: { email, password } });
+            console.log('Login response:', response);
             const token = response.headers['authorization'].split(' ')[1];
             const userData = response.data.data;
             // Response structure is flat: { id, email, admin, ... }
@@ -31,8 +34,9 @@ export const AuthProvider = ({ children }) => {
             setUser(userWithAdmin);
             return { success: true };
         } catch (error) {
-            console.error("Login error", error);
-            return { success: false, error: error.response?.data?.error || 'Login failed' };
+            console.error("Login error details:", error);
+            console.error("Error response:", error.response);
+            return { success: false, error: error.response?.data?.status?.message || error.response?.data?.error || 'Login failed' };
         }
     };
 
